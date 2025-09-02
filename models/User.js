@@ -16,11 +16,10 @@ const UserSchema = new Schema({
         type : String,
         required : true,
     },
-    role : {
-        type : String,
-        required : true,
-        default : 'User'
-    }
+    projects : [{
+        type : Schema.Types.ObjectId,
+        ref : "Projects"
+    }]
 },{
     timestamps : true
 })
