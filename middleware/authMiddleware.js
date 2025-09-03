@@ -9,7 +9,6 @@ function middleware(req,res,next){
             if (decode){
                 req.user = {
                     id : decode.id,
-                    role : decode.role,
                     name : decode.name,
                     email : decode.email
                 }
