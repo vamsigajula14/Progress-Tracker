@@ -1,4 +1,5 @@
 const Projects = require('../models/Project');
+const User = require("../models/User");
 
 const Tasks = require('../models/Task');
 
@@ -11,7 +12,7 @@ const createProject = async (req, res) => {
 
     const project = new Projects({ name, description, userId: id });
     await project.save();
-
+    await User.findByIdAndUpdate(req.user.id,{$push:{projects : project._id}});
     res.status(201).json({ success: true, project });
   } catch (err) {
     res.status(500).json({
@@ -54,14 +55,14 @@ const getProjectById = async (req, res) => {
 const updateProject = async (req, res) => {
   try {
     const { name, description, status, progress } = req.body;
-
+    
     const project = await Projects.findOneAndUpdate(
       { _id: req.params.id, userId: req.user.id },
       { name, description, status, progress },
       { new: true }
     );
-
     if (!project) return res.status(404).json({ success: false, error: "Project not found" });
+
 
     res.json({ success: true, message: "Project updated successfully", project });
   } catch (err) {
@@ -78,6 +79,8 @@ const deleteProject = async (req, res) => {
 
     const project = await Projects.findOne({ _id: id, userId: req.user.id });
 
+    if (!project) return res.status(404).json({ success: false, error: "Project not found" });
+
     const tasks = await Tasks.find({projectId : project._id});
 
     for(const task of tasks){
@@ -86,9 +89,10 @@ const deleteProject = async (req, res) => {
 
     await Tasks.deleteMany({projectId : project._id});
 
-    if (!project) return res.status(404).json({ success: false, error: "Project not found" });
 
     await Projects.deleteOne({ _id: id, userId: req.user.id });
+
+    await User.findByIdAndUpdate(req.user.id,{$pull : {projects:project._id}});
 
     res.json({ success: true, message: `${project.name} deleted successfully` });
   } catch (err) {
