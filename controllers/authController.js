@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 const JWT_SECRET = process.env.JWT_SECRET;
 
 const registerUser = async (req,res)=>{
-    const {name,email,password,role} = req.body;
+    const {name,email,password} = req.body;
 
     try{
         const salt = await bcrypt.genSalt(10);
@@ -39,7 +39,7 @@ const loginUser = async (req,res)=>{
         if (user){
             const decodedPassword = await bcrypt.compare(password,user.password);
             if (decodedPassword){
-                const jwttoken = jwt.sign({id : user._id , role : user.role, name : user.name,email : user.email},JWT_SECRET,{expiresIn:"1h"})
+                const jwttoken = jwt.sign({id : user._id , name : user.name,email : user.email},JWT_SECRET,{expiresIn:"1h"})
                 res.status(200).json({
                     messege : "User login Successfully",
                     user : {
