@@ -129,19 +129,54 @@ const updateSubTask = async (req,res)=>{
 // PATCH /api/subtasks/:id/status
 const updateSubtaskStatus = async (req, res) => {
   try {
-    const  id  = req.params.id;
+    const { id } = req.params;
     const { status } = req.body;
-    
+
     const subtask = await SubTasks.findById(id);
     if (!subtask) {
       return res.status(404).json({ success: false, message: "Subtask not found" });
     }
 
+    //  Update the subtask status
     subtask.status = status;
     await subtask.save();
 
-    res.json({ success: true, message: "Subtask status updated", subtask });
+    //  Find parent task
+    const task = await Tasks.findById(subtask.taskId);
+    if (task) {
+      // Fetch all subtasks for this task
+      const subtasks = await SubTasks.find({ _id: { $in: task.subtasks } });
+
+      // Calculate how many are completed
+      const total = subtasks.length;
+      const completed = subtasks.filter((s) => s.status === "completed").length;
+
+      // Compute progress percentage
+      const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+      // Update task progress
+      task.progress = progress;
+      await task.save();
+
+      //  Update the parent project as well
+      const project = await Projects.findById(task.projectId);
+      if (project) {
+        const allTasks = await Tasks.find({ project: project._id });
+        const totalTasks = allTasks.length;
+        const totalProgress = allTasks.reduce((sum, t) => sum + t.progress, 0);
+        project.progress =
+          totalTasks > 0 ? Math.round(totalProgress / totalTasks) : 0;
+        await project.save();
+      }
+    }
+
+    res.json({
+      success: true,
+      message: "Subtask status updated successfully",
+      subtask,
+    });
   } catch (err) {
+    console.error("Error updating subtask:", err);
     res.status(500).json({ success: false, message: err.message });
   }
 };
