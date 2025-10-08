@@ -161,7 +161,7 @@ const updateSubtaskStatus = async (req, res) => {
       //  Update the parent project as well
       const project = await Projects.findById(task.projectId);
       if (project) {
-        const allTasks = await Tasks.find({ project: project._id });
+        const allTasks = await Tasks.find({ projectId: project._id });
         const totalTasks = allTasks.length;
         const totalProgress = allTasks.reduce((sum, t) => sum + t.progress, 0);
         project.progress =
