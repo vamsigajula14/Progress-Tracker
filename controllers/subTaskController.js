@@ -126,6 +126,26 @@ const updateSubTask = async (req,res)=>{
     }
 }
 
+// PATCH /api/subtasks/:id/status
+const updateSubtaskStatus = async (req, res) => {
+  try {
+    const  id  = req.params.id;
+    const { status } = req.body;
+    
+    const subtask = await SubTasks.findById(id);
+    if (!subtask) {
+      return res.status(404).json({ success: false, message: "Subtask not found" });
+    }
+
+    subtask.status = status;
+    await subtask.save();
+
+    res.json({ success: true, message: "Subtask status updated", subtask });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 const deleteSubTask = async (req,res)=>{
     try{
         const id = req.params.id;
@@ -169,4 +189,4 @@ const deleteSubTask = async (req,res)=>{
 }
 
 
-module.exports = {createSubTask, getSubTask, updateSubTask, deleteSubTask}
+module.exports = {createSubTask, getSubTask, updateSubTask, updateSubtaskStatus,deleteSubTask}
